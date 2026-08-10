@@ -22,7 +22,15 @@ export default function Document() {
           href="/assets/vendors/font-awesome/css/font-awesome.min.css"
         />
 
-
+        {/* Slick Carousel CSS — loaded via CDN to avoid Turbopack node_modules CSS issue */}
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"
+        />
         {/* Google Tag Manager */}
         <Script
           dangerouslySetInnerHTML={{

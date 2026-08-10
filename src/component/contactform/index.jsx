@@ -5,8 +5,8 @@ import styles from "./styles.module.css";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Title from "@/common/Title";
-import { HomePage, programConfig } from "@/constants/Home";
-import { useRouter } from "next/router";
+import { /* HomePage, */ programConfig } from "@/constants/Home"; // HomePage: kept for Razorpay re-enablement
+// import { useRouter } from "next/router"; // Razorpay: disabled — re-enable when Razorpay is active
 import { useState } from "react";
 import { Popup } from "@/common/Popup";
 import { AcademyRegisterQuery } from "@/hooks/useAcademyTrainingQuery";
@@ -16,13 +16,13 @@ import {
 } from "@/utils/programStatus";
 
 const ContactForm = ({ ipAddress }) => {
-  const router = useRouter();
+  // const router = useRouter(); // Razorpay: disabled — re-enable when Razorpay is active
   const { mutate: registerMutate } = AcademyRegisterQuery();
 
-  const [instructionOpen, setInstructionOpen] = useState(false);
-  const [agree, setAgree] = useState(false);
+  // const [instructionOpen, setInstructionOpen] = useState(false); // Razorpay: disabled
+  // const [agree, setAgree] = useState(false);                     // Razorpay: disabled
   const [processing, setProcessing] = useState(false);
-  const [formValues, setFormValues] = useState(null);
+  // const [formValues, setFormValues] = useState(null);             // Razorpay: disabled
 
   const registrationOpen = isRegistrationOpen(programConfig);
   const formTitle = registrationOpen ? "Reserve" : "Join";
@@ -50,9 +50,12 @@ const ContactForm = ({ ipAddress }) => {
     const cleanMobile = rawMobile.replace(/\D/g, "").replace(/^91/, "").slice(-10);
 
     return {
+      form_type: "ads_lead",
       name: values?.name?.trim() || "",
-      email: values?.email?.trim().toLowerCase() || "",
       mobile: cleanMobile ? `+91${cleanMobile}` : "",
+      who_are_you: values?.whoAreYou?.trim() || "",
+      why_join: values?.whyJoin?.trim() || "",
+      attending_aug15: values?.attendingAug15 || "no",
       programm_date: getProgramDate(),
       page_name: programConfig.pageName || "decoding-of-practice",
       ip_address: ipAddress || "",
@@ -65,85 +68,88 @@ const ContactForm = ({ ipAddress }) => {
     };
   };
 
-  const submitWaitlist = async (values) => {
-    setProcessing(true);
-
-    const apiPayload = {
-      ...createBasePayload(values),
-      amount: 0,
-      razorpay_order_id: "",
-      razorpay_payment_id: "",
-      razorpay_signature: "",
-      payment_status: "waitlist",
-      captured: "",
-    };
-
+  // ── Google Sheet submission (active) ──────────────────────────────────────
+  const handleGoogleSheetForm = async (formData, retries = 3, delay = 1500) => {
     try {
-      await registerUserToDB(apiPayload);
+      const res = await fetch(
+        "https://script.google.com/macros/s/AKfycbwVWJGKVgMdl_OJZ0u9tVjlp7eaFLQDKtfVZoM3-y0jImvQWmGEKoh9-3tSIKhQZh4A/exec",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData.toString(),
+        }
+      );
+      const text = await res.text();
+      console.log("Google Sheet Response:", text);
+      if (res.ok) {
+        return true;
+      }
+      throw new Error("Sheet responded with non-OK");
     } catch (err) {
-      console.error("Database registration failed for waitlist:", err);
+      console.error(
+        `Google Sheet attempt failed. Retries left: ${retries}, err `
+      );
+      if (retries <= 1) {
+        console.error("Google Sheet failed permanently!");
+        return false;
+      }
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return handleGoogleSheetForm(formData, retries - 1, delay);
     }
-    await safeSetPaymentDetails(apiPayload);
-
-    const params = new URLSearchParams();
-    Object.keys(apiPayload).forEach((key) =>
-      params.append(key, apiPayload[key] ?? "")
-    );
-
-    const sheetSaved = await handleGoogleSheetForm(params);
-    if (!sheetSaved) {
-      console.error("Google Sheet waitlist submission failed");
-    }
-
-    window.location.href = "/thank-you";
   };
 
-  const formik = useFormik({
-    initialValues: {
-      name: "",
-      email: "",
-      mobile: "",
-    },
+  // eslint-disable-next-line no-unused-vars
+  const safeSetPaymentDetails = async (data) => {
+    if (typeof window === "undefined") return;
+    try {
+      const safeData = JSON.stringify(data);
+      localStorage.setItem("PaymentDetails", safeData);
+    } catch (error) {
+      console.error("Failed to store PaymentDetails:", error);
+    }
+  };
 
-    validationSchema: Yup.object({
-      name: Yup.string()
-        .matches(
-          /^[a-zA-Z\s'.]*$/,
-          "Name can only contain letters, spaces, dots and apostrophes"
-        )
-        .max(100, "Name must not exceed 100 characters"),
-      email: Yup.string()
-        .required("Email is required")
-        .matches(
-          /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-          "Enter a valid email address (e.g. name@gmail.com)"
-        )
-        .test(
-          "lowercase",
-          "Email must be lowercase",
-          (v) => !v || v === v.toLowerCase()
-        ),
-      mobile: Yup.string()
-        .required("Mobile number is required")
-        .matches(
-          /^[6-9][0-9]{9}$/,
-          "Enter a valid 10-digit mobile number"
-        ),
-    }),
+  // ── DB registration (kept, not removed) ───────────────────────────────────
+  // eslint-disable-next-line no-unused-vars
+  const registerUserToDB = (payload) =>
+    new Promise((resolve, reject) => {
+      registerMutate(
+        { value: payload },
+        {
+          onSuccess: resolve,
+          onError: reject,
+        }
+      );
+    });
 
-    onSubmit: async (values) => {
-      setFormValues(values);
+  // ── WhatsApp helper (kept, not removed) ───────────────────────────────────
+  // eslint-disable-next-line no-unused-vars
+  const handleWhatsappMessage = async (
+    phone,
+    name,
+    amount,
+    program,
+    schedule,
+    platform,
+    date
+  ) => {
+    await fetch("/api/sendWhatsapp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone,
+        name,
+        amount,
+        programm_name: program,
+        schedule,
+        platform,
+        link_date: date,
+      }),
+    });
+  };
 
-      if (!isRegistrationOpen(programConfig)) {
-        await submitWaitlist(values);
-        return;
-      }
-
-      setAgree(false);
-      setInstructionOpen(true);
-    },
-  });
-
+  // ── Razorpay order + payment flow (COMMENTED OUT — do not remove) ─────────
+  /*
   const openRazorpay = async () => {
     if (!formValues) return;
 
@@ -248,7 +254,6 @@ const ContactForm = ({ ipAddress }) => {
 
       prefill: {
         name: formValues.name,
-        email: formValues.email,
         contact: formValues.mobile,
       },
 
@@ -263,81 +268,82 @@ const ContactForm = ({ ipAddress }) => {
 
     razor.open();
   };
+  */
 
-  const registerUserToDB = (payload) =>
-    new Promise((resolve, reject) => {
-      registerMutate(
-        { value: payload },
-        {
-          onSuccess: resolve,
-          onError: reject,
-        }
+  // ── Formik ────────────────────────────────────────────────────────────────
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      mobile: "",
+      whoAreYou: "",
+      whyJoin: "",
+      attendingAug15: "",
+    },
+
+    validationSchema: Yup.object({
+      name: Yup.string()
+        .required("Name is required")
+        .matches(
+          /^[a-zA-Z\s'.]*$/,
+          "Name can only contain letters, spaces, dots and apostrophes"
+        )
+        .max(100, "Name must not exceed 100 characters"),
+      mobile: Yup.string()
+        .required("Mobile number is required")
+        .matches(
+          /^[6-9][0-9]{9}$/,
+          "Enter a valid 10-digit mobile number"
+        ),
+      whoAreYou: Yup.string()
+        .required("Please enter your profession or current role")
+        .min(5, "Please write at least 5 characters")
+        .max(300, "Must not exceed 300 characters"),
+      whyJoin: Yup.string()
+        .required("Please share what made you interested")
+        .min(10, "Please write at least 10 characters")
+        .max(500, "Must not exceed 500 characters"),
+      attendingAug15: Yup.string()
+        .oneOf(["yes", "no"], "Please select Yes or No")
+        .required("Please confirm your attendance on August 15"),
+    }),
+
+    onSubmit: async (values) => {
+      setProcessing(true);
+
+      const apiPayload = {
+        ...createBasePayload(values),
+        // amount: 0,                   // Razorpay: kept for re-enablement
+        // razorpay_order_id: "",       // Razorpay: kept for re-enablement
+        // razorpay_payment_id: "",     // Razorpay: kept for re-enablement
+        // razorpay_signature: "",      // Razorpay: kept for re-enablement
+        // payment_status: "registered",// Razorpay: kept for re-enablement
+        // captured: "",               // Razorpay: kept for re-enablement
+      };
+
+      // DB registration — commented out, re-enable when backend is active
+      // try {
+      //   await registerUserToDB(apiPayload);
+      // } catch (err) {
+      //   console.error("Database registration failed:", err);
+      // }
+
+      // localStorage — commented out, re-enable when needed
+      // await safeSetPaymentDetails(apiPayload);
+
+      // ── Google Sheet submission (active) ─────────────────────────────────
+      const params = new URLSearchParams();
+      Object.keys(apiPayload).forEach((key) =>
+        params.append(key, apiPayload[key] ?? "")
       );
-    });
 
-  const handleWhatsappMessage = async (
-    phone,
-    name,
-    amount,
-    program,
-    schedule,
-    platform,
-    date
-  ) => {
-    await fetch("/api/sendWhatsapp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phone,
-        name,
-        amount,
-        programm_name: program,
-        schedule,
-        platform,
-        link_date: date,
-      }),
-    });
-  };
-
-  const handleGoogleSheetForm = async (formData, retries = 3, delay = 1500) => {
-    try {
-      const res = await fetch(
-        "https://script.google.com/macros/s/AKfycbx130nzdo6NT9hq_szOSMcIR7AbSLL7MCfL_7ho9pHOOvFyYlDybVhBSEW-19xm0X65/exec",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString(),
-        }
-      );
-      const text = await res.text();
-      console.log("Google Sheet Response:", text);
-      if (res.ok) {
-        return true;
+      const sheetSaved = await handleGoogleSheetForm(params);
+      if (!sheetSaved) {
+        console.error("Google Sheet submission failed");
       }
-      throw new Error("Sheet responded with non-OK");
-    } catch (err) {
-      console.error(
-        `Google Sheet attempt failed. Retries left: ${retries}, err `
-      );
-      if (retries <= 1) {
-        console.error("Google Sheet failed permanently!");
-        return false;
-      }
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      return handleGoogleSheetForm(formData, retries - 1, delay);
-    }
-  };
 
-  const safeSetPaymentDetails = async (data) => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const safeData = JSON.stringify(data);
-      localStorage.setItem("PaymentDetails", safeData);
-    } catch (error) {
-      console.error("Failed to store PaymentDetails:", error);
-    }
-  };
+      window.location.href = "/thank-you";
+    },
+  });
 
   return (
     <>
@@ -354,50 +360,35 @@ const ContactForm = ({ ipAddress }) => {
               subtitle={formSubtitle}
             />
           </div>
+
+          {/* ── Name ── */}
           <div className={styles.inputgrp}>
-            <label>Name</label>
+            <label>
+              Name<span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
+            </label>
             <input
               type="text"
               className="form-control"
-              placeholder="Name"
+              placeholder="Your full name"
               {...formik.getFieldProps("name")}
             />
             {formik.touched.name && formik.errors.name && (
-              <small style={{ fontSize: "12px" }}>{formik.errors.name}</small>
-            )}
-          </div>
-
-          <div className={styles.inputgrp}>
-            <label>
-              Email<span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Email"
-              name="email"
-              value={formik.values.email}
-              onChange={(e) => {
-                formik.setFieldValue("email", e.target.value.toLowerCase().trim());
-              }}
-              onBlur={formik.handleBlur}
-            />
-            {formik.touched.email && formik.errors.email && (
               <small style={{ fontSize: "12px", color: "#dc3545" }}>
-                {formik.errors.email}
+                {formik.errors.name}
               </small>
             )}
           </div>
 
+          {/* ── Phone Number ── */}
           <div className={styles.inputgrp}>
             <label>
-              Mobile<span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
+              Phone Number<span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
             </label>
             <div className="position-relative">
               <input
                 type="text"
-                className={`${styles.inputmobile} form-control `}
-                placeholder="Mobile"
+                className={`${styles.inputmobile} form-control`}
+                placeholder="10-digit mobile number"
                 name="mobile"
                 value={formik.values.mobile}
                 onChange={(e) => {
@@ -422,9 +413,100 @@ const ContactForm = ({ ipAddress }) => {
             )}
           </div>
 
+          {/* ── Profession / Role ── */}
+          <div className={styles.inputgrp}>
+            <label>
+              Your Profession / Current Role
+              <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
+            </label>
+            <textarea
+              className={`form-control ${styles.textareafield}`}
+              placeholder="e.g. Advocate, Law Student, Legal Professional, In-House Counsel..."
+              rows={2}
+              name="whoAreYou"
+              value={formik.values.whoAreYou}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+            <div className={styles.charcount}>
+              {formik.values.whoAreYou.length}/300
+            </div>
+            {formik.touched.whoAreYou && formik.errors.whoAreYou && (
+              <small style={{ fontSize: "12px", color: "#dc3545" }}>
+                {formik.errors.whoAreYou}
+              </small>
+            )}
+          </div>
+
+          {/* ── Why Interested ── */}
+          <div className={styles.inputgrp}>
+            <label>
+              What made you interested in this masterclass?
+              <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
+            </label>
+            <textarea
+              className={`form-control ${styles.textareafield}`}
+              placeholder="e.g. I want to learn how AI can assist in legal drafting and improve my practice efficiency..."
+              rows={2}
+              name="whyJoin"
+              value={formik.values.whyJoin}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+            <div className={styles.charcount}>
+              {formik.values.whyJoin.length}/500
+            </div>
+            {formik.touched.whyJoin && formik.errors.whyJoin && (
+              <small style={{ fontSize: "12px", color: "#dc3545" }}>
+                {formik.errors.whyJoin}
+              </small>
+            )}
+          </div>
+
+          {/* ── Attendance Confirmation — Aug 15 ── */}
+          <div className={`${styles.inputgrp} ${styles.checkboxgrp}`}>
+            <p className={styles.checkboxlabel} style={{ marginBottom: "12px" }}>
+              Will you be attending the live session on{" "}
+              <strong>Saturday, 15 August 2026?</strong>
+              <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
+            </p>
+            <div className={styles.radioGroup}>
+              <label className={`${styles.radioOption} ${formik.values.attendingAug15 === "yes" ? styles.radioSelected : ""
+                }`}>
+                <input
+                  type="radio"
+                  name="attendingAug15"
+                  value="yes"
+                  checked={formik.values.attendingAug15 === "yes"}
+                  onChange={() => formik.setFieldValue("attendingAug15", "yes")}
+                  onBlur={formik.handleBlur}
+                />
+                <span>✔ Yes, I will attend</span>
+              </label>
+              <label className={`${styles.radioOption} ${formik.values.attendingAug15 === "no" ? styles.radioSelectedNo : ""
+                }`}>
+                <input
+                  type="radio"
+                  name="attendingAug15"
+                  value="no"
+                  checked={formik.values.attendingAug15 === "no"}
+                  onChange={() => formik.setFieldValue("attendingAug15", "no")}
+                  onBlur={formik.handleBlur}
+                />
+                <span>✖ No, I cannot attend</span>
+              </label>
+            </div>
+            {formik.touched.attendingAug15 && formik.errors.attendingAug15 && (
+              <small style={{ fontSize: "12px", color: "#dc3545", display: "block", marginTop: "6px" }}>
+                {formik.errors.attendingAug15}
+              </small>
+            )}
+          </div>
+
+          {/* ── Submit ── */}
           <div className={`mt-4 d-md-flex justify-content-center`}>
             <Button
-              name={registrationOpen ? "SUBMIT" : "JOIN WAITLIST"}
+              name={registrationOpen ? "REGISTER NOW — 15 AUG" : "JOIN WAITLIST"}
               type={"submit"}
               disabled={processing}
             />
@@ -432,6 +514,8 @@ const ContactForm = ({ ipAddress }) => {
         </form>
       </div>
 
+      {/* ── Razorpay Instruction Popup (COMMENTED OUT — do not remove) ── */}
+      {/*
       <Popup open={instructionOpen} onClose={() => setInstructionOpen(false)}>
         <div className={styles.loadingPopup}>
           <h4>{'\u26A0\uFE0F'} Important Payment Instruction</h4>
@@ -485,12 +569,14 @@ const ContactForm = ({ ipAddress }) => {
           </div>
         </div>
       </Popup>
+      */}
 
+      {/* ── Processing Popup ── */}
       <Popup open={processing} closeOnOutsideClick={false}>
         <div className={styles.loadingPopup}>
           <h4>
             {'\u26A0\uFE0F'}{" "}
-            {registrationOpen ? "Processing Payment" : "Submitting Details"}
+            Submitting Your Registration...
           </h4>
           <p>Please wait. Do not close or refresh this page.</p>
         </div>

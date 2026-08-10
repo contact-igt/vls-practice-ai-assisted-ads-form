@@ -5,11 +5,11 @@
   z-index: 2;
   isolation: isolate;
   overflow: hidden;
-  min-height: 100vh;
+  min-height: auto;
   display: flex;
   align-items: center;
   color: #fff;
-  padding: 5rem 0 calc(4rem + var(--register-sticky-height));
+  padding: 3rem 0 calc(1.5rem + var(--register-sticky-height));
 }
 
 /* ── Background layer: photo ── */
@@ -177,13 +177,13 @@
 
   .bannersec {
     min-height: auto;
-    padding: 5rem 0 calc(3rem + var(--register-sticky-height));
+    padding: 3rem 0 calc(1.5rem + var(--register-sticky-height));
   }
 }
 
 @media (max-width: 767px) {
   .bannersec {
-    padding: 4rem 0 calc(2.5rem + var(--register-sticky-height));
+    padding: 2.5rem 0 calc(1.5rem + var(--register-sticky-height));
   }
 
   .subheading {

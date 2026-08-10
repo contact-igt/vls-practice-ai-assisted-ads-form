@@ -2,8 +2,7 @@ import Footer from "@/common/Footer";
 import Header from "@/common/Header";
 import "@/styles/globals.css";
 import useUTMSource from "@/utils/useUTMSource";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+// slick-carousel CSS loaded via CDN in _document.jsx (Turbopack cannot resolve node_modules CSS)
 import "bootstrap/dist/css/bootstrap.min.css";
 import { SnackbarProvider } from "notistack";
 import { QueryClient, QueryClientProvider } from "react-query";

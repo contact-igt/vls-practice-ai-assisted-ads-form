@@ -1,12 +1,14 @@
 .commonbtn {
-    font-size: 16px;
-    padding: 18px 40px;
+    font-size: 15px;
+    padding: 14px 28px;
     border: none;
     font-weight: 600;
     background: #b20a0a !important;
     color: #fff !important;
     border-radius: 100px !important;
-    width: 250px;
+    width: auto;
+    min-width: 200px;
+    white-space: nowrap;
     display: flex;
     gap: 8px;
     justify-content: center;
@@ -20,7 +22,8 @@
 
     .commonbtn {
         width: 100%;
-        padding: 15px 40px;
-        font-size: 15px;
+        padding: 13px 24px;
+        font-size: 14px;
+        white-space: nowrap;
     }
 }

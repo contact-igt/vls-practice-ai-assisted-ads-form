@@ -135,7 +135,7 @@ const Testimonial = ({ scrollToContactForm }) => {
         <div className="w-100 d-flex justify-content-center mt-5">
           <Button
             scrollToContactForm={scrollToContactForm}
-            name={getSectionCtaText(programConfig, `Enroll Now \u20B9${programConfig.fee}`)}
+            name={getSectionCtaText(programConfig, `Enroll Now`)}
             icon="calendar-check"
             icon_color="#fff"
             bg_color="rgb(178, 10, 10)"
