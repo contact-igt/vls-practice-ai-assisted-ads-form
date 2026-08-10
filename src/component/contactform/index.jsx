@@ -327,8 +327,8 @@ const ContactForm = ({ ipAddress }) => {
       //   console.error("Database registration failed:", err);
       // }
 
-      // localStorage — commented out, re-enable when needed
-      // await safeSetPaymentDetails(apiPayload);
+      // Save details for Thank You page display
+      await safeSetPaymentDetails(apiPayload);
 
       // ── Google Sheet submission (active) ─────────────────────────────────
       const params = new URLSearchParams();
