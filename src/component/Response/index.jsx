@@ -1,40 +1,26 @@
-﻿import Button from "@/common/Button";
+import Button from "@/common/Button";
 import styles from "./styles.module.css";
-import { useRouter } from "next/router";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { programConfig } from "@/constants/Home";
 
 const Response = () => {
   const [userDetail, setUserDetail] = useState(null);
   const [mounted, setMounted] = useState(false);
-  const router = useRouter();
-  const { query, isReady, asPath } = router;
-  const routePath = asPath?.split("?")?.[0];
-  const issuccess =
-    mounted &&
-    isReady &&
-    (query.response === "thank-you" || routePath === "/thank-you");
-  const isWaitlist = userDetail?.payment_status === "waitlist";
 
   useEffect(() => {
     setMounted(true);
-
     try {
       const storedData = localStorage.getItem("PaymentDetails");
-
       if (storedData) {
         setUserDetail(JSON.parse(storedData));
-      } else {
-        setUserDetail(null);
       }
     } catch (error) {
       console.error("Invalid PaymentDetails in localStorage", error);
-      localStorage.removeItem("PaymentDetails");
-      setUserDetail(null);
     }
   }, []);
 
-  if (!mounted || !isReady) {
+  if (!mounted) {
     return (
       <section className={`pt-5 mt-5 ${styles.responseSection}`}>
         <div className="container text-center">
@@ -49,12 +35,8 @@ const Response = () => {
       <div className="container">
         <div className={`text-center ${styles.responseIcon}`}>
           <Image
-            src={
-              issuccess
-                ? "/assets/Response/success.png"
-                : "/assets/Response/error.png"
-            }
-            alt="icon"
+            src="/assets/Response/success.png"
+            alt="Success Icon"
             width={120}
             height={120}
             priority
@@ -62,68 +44,65 @@ const Response = () => {
         </div>
 
         <div className={`text-center ${styles.responseInfo}`}>
-          <h5 className={issuccess ? styles.successText : styles.errorText}>
-            {issuccess
-              ? isWaitlist
-                ? "Thank You"
-                : "Payment Successful"
-              : "Payment Failed"}
-          </h5>
+          <h2 className={styles.successText}>Registration Received!</h2>
+          <p className="lead mt-2 mb-4" style={{ color: "#444", fontSize: "1.1rem" }}>
+            Thank you for registering your interest in the{" "}
+            <strong>Decoding of Practice Masterclass</strong>.
+          </p>
 
-          {issuccess ? (
-            <>
-              <p>
-                {isWaitlist
-                  ? "Thank you! Your details have been added to the waitlist."
-                  : "Thank you! Your payment has been received successfully. Below are your transaction details:"}
-              </p>
-
-              {userDetail ? (
-                <div className={styles.summaryBox}>
+          {/* ── Next Steps Info Card ── */}
+          <div className={styles.noticeBox}>
+            <div className={styles.noticeTitle}>
+              📋 What Happens Next?
+            </div>
+            <div className={styles.stepList}>
+              <div className={styles.stepItem}>
+                <div className={styles.stepNumber}>1</div>
+                <div className={styles.stepText}>
                   <p>
-                    <strong>Name:</strong> {userDetail?.name || ""}
+                    <strong>Team Outreach:</strong> Our team will reach out to you shortly via Phone / WhatsApp to confirm your details.
                   </p>
-                  <p>
-                    <strong>Email:</strong> {userDetail?.email || "-"}
-                  </p>
-                  <p>
-                    <strong>Mobile:</strong> {userDetail?.mobile || "-"}
-                  </p>
-                  {!isWaitlist && (
-                    <>
-                      <p>
-                        <strong>Amount:</strong> {`\u20B9${userDetail?.amount || "-"}`}
-                      </p>
-                      <p>
-                        <strong>Transaction ID:</strong>{" "}
-                        {userDetail?.razorpay_payment_id || "Not Available"}
-                      </p>
-                    </>
-                  )}
                 </div>
-              ) : (
-                ""
+              </div>
+              <div className={styles.stepItem}>
+                <div className={styles.stepNumber}>2</div>
+                <div className={styles.stepText}>
+                  <p>
+                    <strong>Payment Confirmation:</strong> After speaking with our team, you can complete the registration fee of <strong>₹{programConfig?.fee || 499}</strong> to confirm your seat for the live masterclass.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Application Summary ── */}
+          {userDetail && (
+            <div className={styles.summaryBox}>
+              <h6 className="fw-bold mb-3 text-muted" style={{ fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Your Submitted Details
+              </h6>
+              {userDetail.name && (
+                <p>
+                  <strong>Name:</strong> {userDetail.name}
+                </p>
               )}
-            </>
-          ) : (
-            <p>
-              Oops! We couldn\u2019t process your payment. Please try again or call
-              us directly for support.
-            </p>
+              {userDetail.mobile && (
+                <p>
+                  <strong>Mobile:</strong> {userDetail.mobile}
+                </p>
+              )}
+              {userDetail.who_are_you && (
+                <p>
+                  <strong>Role / Profession:</strong> {userDetail.who_are_you}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
-        <div
-          className={`d-flex flex-md-row flex-column justify-content-center gap-3 ${styles.responseCta}`}
-        >
+        <div className={`d-flex flex-md-row flex-column justify-content-center gap-3 ${styles.responseCta}`}>
           <Button name={"Back to Home"} link={"/"} icon={"arrow-left"} />
-          {!issuccess && (
-            <Button
-              name={"Call Support"}
-              link={"tel:+919500207811"}
-              icon={"phone"}
-            />
-          )}
+          <Button name={"Contact Support"} link={"tel:+919500207811"} icon={"phone"} />
         </div>
       </div>
     </section>
