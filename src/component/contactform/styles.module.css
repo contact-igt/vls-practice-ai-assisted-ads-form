@@ -2,7 +2,7 @@
     width: 100%;
     max-width: 540px;
     box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-    padding: 20px 24px 12px;
+    padding: 24px 24px 26px;
     border-radius: 20px;
     background-color: #ffffff;
     /* Explicit opacity:1 prevents any inherited stacking-context fade */

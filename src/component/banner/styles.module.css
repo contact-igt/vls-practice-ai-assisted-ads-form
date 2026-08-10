@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
   color: #fff;
-  padding: 3rem 0 calc(1.5rem + var(--register-sticky-height));
+  padding: 3.2rem 0;
 }
 
 /* ── Background layer: photo ── */
@@ -173,6 +173,10 @@
 @media (max-width: 991px) {
   .bannertitle {
     padding-right: 0;
+  }
+
+  .formcol {
+    margin-top: 2.2rem;
   }
 
   .bannersec {
