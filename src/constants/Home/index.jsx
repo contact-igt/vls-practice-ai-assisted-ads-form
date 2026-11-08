@@ -13,13 +13,13 @@ export const programConfig = {
   category: "AI-Assisted Legal Practice Masterclass",
   sessionStatus: SESSION_STATUS,
   // Set these only when SESSION_STATUS is "announced" and a real date is confirmed:
-  date: "Saturday, 15 August 2026",
-  time: "10:30 AM - 01:30 PM IST",
-  classStartAt: "2026-08-15T10:30:00+05:30",
+  date: "Sunday, 15 November 2026",
+  time: "",
+  classStartAt: "2026-11-15T18:00:00+05:30",
   duration: "3 Hours",
   mode: "Live on Google Meet (Interactive Q&A)",
   language: "English / Tamil",
-  fee: 499,
+  fee: null,
   recordingProvided: false,
   certificateProvided: true, // only to attendees who complete 80%+ of the session
   whatsapp: "+919500025216",
@@ -82,7 +82,7 @@ export const HomePage = {
       id: 1,
       value:
         SESSION_STATUS === "announced" && programConfig.date
-          ? `${programConfig.date} - ${programConfig.time}`
+          ? programConfig.date
           : "Next live session \u2014 date to be announced",
       icon: "calendar-clock",
     },
@@ -104,7 +104,7 @@ export const HomePage = {
     },
     {
       id: 5,
-      value: `\u20B9${programConfig.fee} \u2014 ${programConfig.duration} Live Masterclass`,
+      value: `${programConfig.duration} Live Masterclass`,
       icon: "hand-coins",
     },
     {
@@ -379,19 +379,13 @@ export const HomePage = {
     },
     {
       id: 12,
-      question: "What is the fee?",
-      answer: `\u20B9${programConfig.fee}. This registers you for the 3-hour live masterclass.`,
-    },
-    {
-      id: 13,
       question: "When is the next session?",
-      answer:
-        `The next live session is on ${programConfig.date} from ${programConfig.time}.`,
+      answer: `The next live session is on ${programConfig.date}.`,
     },
   ],
 
   razorpay: {
     title: "Decoding of Practice \u2014 AI-Assisted Legal Practice Masterclass",
-    amount: 499,
+    amount: 0,
   },
 };

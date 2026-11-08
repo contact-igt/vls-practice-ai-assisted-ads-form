@@ -28,7 +28,11 @@ export const getSectionCtaText = (programConfig, fallback = "Register Now") => {
 export const getSessionDisplay = (programConfig) => {
   if (!isRegistrationOpen(programConfig)) return DATE_TIME_ANNOUNCEMENT_TEXT;
 
-  return programConfig?.sessionStatus === "announced" && programConfig?.date
-    ? `${programConfig.date} - ${programConfig.time}`
-    : DATE_TIME_ANNOUNCEMENT_TEXT;
+  if (programConfig?.sessionStatus === "announced" && programConfig?.date) {
+    return programConfig?.time
+      ? `${programConfig.date} - ${programConfig.time}`
+      : programConfig.date;
+  }
+
+  return DATE_TIME_ANNOUNCEMENT_TEXT;
 };

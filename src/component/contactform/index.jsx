@@ -27,9 +27,7 @@ const ContactForm = ({ ipAddress }) => {
   const registrationOpen = isRegistrationOpen(programConfig);
   const formTitle = registrationOpen ? "Reserve" : "Join";
   const formSpanTitle = registrationOpen ? "Your Seat" : "Waitlist";
-  const formSubtitle = registrationOpen
-    ? `Decoding of Practice \u2014 \u20B9${programConfig.fee}`
-    : `Decoding of Practice \u2014 ${PRICE_ANNOUNCEMENT_TEXT}`;
+  const formSubtitle = "Decoding of Practice";
 
   const getUTM = (key) => {
     if (typeof window === "undefined") return "";
@@ -295,7 +293,7 @@ const ContactForm = ({ ipAddress }) => {
           "Enter a valid 10-digit mobile number"
         ),
       whoAreYou: Yup.string()
-        .required("Please enter your profession or current role")
+        .required("Please enter your current profession")
         .min(5, "Please write at least 5 characters")
         .max(300, "Must not exceed 300 characters"),
       whyJoin: Yup.string()
@@ -413,10 +411,10 @@ const ContactForm = ({ ipAddress }) => {
             )}
           </div>
 
-          {/* ── Profession / Role ── */}
+          {/* ── Profession ── */}
           <div className={styles.inputgrp}>
             <label>
-              Your Profession / Current Role
+              Your Current Profession
               <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
             </label>
             <textarea
@@ -463,11 +461,11 @@ const ContactForm = ({ ipAddress }) => {
             )}
           </div>
 
-          {/* ── Attendance Confirmation — Aug 15 ── */}
+          {/* ── Attendance Confirmation — Nov 15 ── */}
           <div className={`${styles.inputgrp} ${styles.checkboxgrp}`}>
             <p className={styles.checkboxlabel} style={{ marginBottom: "12px" }}>
-              Will you be attending the live session on{" "}
-              <strong>Saturday, 15 August 2026?</strong>
+              Will you be able to attend the live session on{" "}
+              <strong>{programConfig.date}?</strong>
               <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
             </p>
             <div className={styles.radioGroup}>
@@ -506,7 +504,7 @@ const ContactForm = ({ ipAddress }) => {
           {/* ── Submit ── */}
           <div className={`mt-4 d-md-flex justify-content-center`}>
             <Button
-              name={registrationOpen ? "REGISTER NOW — 15 AUG" : "JOIN WAITLIST"}
+              name={registrationOpen ? "REGISTER NOW — 15 NOV" : "JOIN WAITLIST"}
               type={"submit"}
               disabled={processing}
             />

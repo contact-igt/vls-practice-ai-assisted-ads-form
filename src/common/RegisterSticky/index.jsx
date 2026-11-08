@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import styles from "./styles.module.css";
 import { programConfig } from "@/constants/Home";
 import {
@@ -45,19 +45,21 @@ const RegisterSticky = ({ scrollToContactForm }) => {
         <p>{sessionDisplay}</p>
       </div>
       <div className={styles.registrationActions}>
-        <div
-          className={styles.priceWrap}
-          aria-label={`Price INR 999 discounted to INR ${programConfig.fee}`}
-        >
-          <p className={styles.pricing}>
-            <span>{`INR \u20B9999`}</span>
-            <strong>{`INR \u20B9${programConfig.fee}`}</strong>
-          </p>
-          <p className={styles.mobilePricing}>
-            <span>{`INR \u20B9999`}</span>
-            <strong>{`INR \u20B9${programConfig.fee}`}</strong>
-          </p>
-        </div>
+        {Boolean(programConfig.fee) && (
+          <div
+            className={styles.priceWrap}
+            aria-label={`Price INR 999 discounted to INR ${programConfig.fee}`}
+          >
+            <p className={styles.pricing}>
+              <span>{`INR \u20B9999`}</span>
+              <strong>{`INR \u20B9${programConfig.fee}`}</strong>
+            </p>
+            <p className={styles.mobilePricing}>
+              <span>{`INR \u20B9999`}</span>
+              <strong>{`INR \u20B9${programConfig.fee}`}</strong>
+            </p>
+          </div>
+        )}
         <button
           type="button"
           onClick={scrollToContactForm}

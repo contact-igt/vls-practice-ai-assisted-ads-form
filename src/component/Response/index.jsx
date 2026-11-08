@@ -68,7 +68,7 @@ const Response = () => {
                 <div className={styles.stepNumber}>2</div>
                 <div className={styles.stepText}>
                   <p>
-                    <strong>Payment Confirmation:</strong> After speaking with our team, you can complete the registration fee of <strong>₹{programConfig?.fee || 499}</strong> to confirm your seat for the live masterclass.
+                    <strong>Seat Confirmation:</strong> After speaking with our team, we will confirm your seat for the live masterclass and share the joining link.
                   </p>
                 </div>
               </div>
@@ -93,7 +93,7 @@ const Response = () => {
               )}
               {userDetail.who_are_you && (
                 <p>
-                  <strong>Role / Profession:</strong> {userDetail.who_are_you}
+                  <strong>Current Profession:</strong> {userDetail.who_are_you}
                 </p>
               )}
             </div>
