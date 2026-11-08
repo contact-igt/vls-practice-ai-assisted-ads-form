@@ -504,7 +504,7 @@ const ContactForm = ({ ipAddress }) => {
           {/* ── Submit ── */}
           <div className={`mt-4 d-md-flex justify-content-center`}>
             <Button
-              name={registrationOpen ? "REGISTER NOW — 15 NOV" : "JOIN WAITLIST"}
+              name={registrationOpen ? "REGISTER NOW" : "JOIN WAITLIST"}
               type={"submit"}
               disabled={processing}
             />
