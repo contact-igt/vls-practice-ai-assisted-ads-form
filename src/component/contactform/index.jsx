@@ -70,7 +70,7 @@ const ContactForm = ({ ipAddress }) => {
   const handleGoogleSheetForm = async (formData, retries = 3, delay = 1500) => {
     try {
       const res = await fetch(
-        "https://script.google.com/macros/s/AKfycbzSkXPSgcWXFbvfaLVpNBDED-gkejh9ezSVYo5j_Zw1mWsu7SDM3UfNWk7YculCCrQQ/exec",
+        "https://script.google.com/macros/s/AKfycbwirly5HZf_EXhuELHkm6ODR7fyNxUTR40VnMg9jGaPkCXfl0MI_uaeVQktxW7Edqigfg/exec",
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -293,9 +293,7 @@ const ContactForm = ({ ipAddress }) => {
           "Enter a valid 10-digit mobile number"
         ),
       whoAreYou: Yup.string()
-        .required("Please enter your current profession")
-        .min(5, "Please write at least 5 characters")
-        .max(300, "Must not exceed 300 characters"),
+        .required("Please select your current profession"),
       whyJoin: Yup.string()
         .required("Please share what made you interested")
         .min(10, "Please write at least 10 characters")
@@ -417,20 +415,23 @@ const ContactForm = ({ ipAddress }) => {
               Your Current Profession
               <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
             </label>
-            <textarea
-              className={`form-control ${styles.textareafield}`}
-              placeholder="e.g. Advocate, Law Student, Legal Professional, In-House Counsel..."
-              rows={2}
+            <select
+              className={`form-select ${styles.selectfield}`}
               name="whoAreYou"
               value={formik.values.whoAreYou}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-            />
-            <div className={styles.charcount}>
-              {formik.values.whoAreYou.length}/300
-            </div>
+            >
+              <option value="" disabled>Select your profession</option>
+              <option value="Law Student">Law Student</option>
+              <option value="Advocate">Advocate</option>
+              <option value="Legal Professional">Legal Professional</option>
+              <option value="Judiciary Aspirant">Judiciary Aspirant</option>
+              <option value="In-House Counsel">In-House Counsel</option>
+              <option value="Other">Other</option>
+            </select>
             {formik.touched.whoAreYou && formik.errors.whoAreYou && (
-              <small style={{ fontSize: "12px", color: "#dc3545" }}>
+              <small style={{ fontSize: "12px", color: "#dc3545", display: "block", marginTop: "4px" }}>
                 {formik.errors.whoAreYou}
               </small>
             )}
