@@ -70,7 +70,7 @@ const ContactForm = ({ ipAddress }) => {
   const handleGoogleSheetForm = async (formData, retries = 3, delay = 1500) => {
     try {
       const res = await fetch(
-        "https://script.google.com/macros/s/AKfycbzSkXPSgcWXFbvfaLVpNBDED-gkejh9ezSVYo5j_Zw1mWsu7SDM3UfNWk7YculCCrQQ/exec",
+        "https://script.google.com/macros/s/AKfycbwirly5HZf_EXhuELHkm6ODR7fyNxUTR40VnMg9jGaPkCXfl0MI_uaeVQktxW7Edqigfg/exec",
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
