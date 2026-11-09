@@ -81,6 +81,26 @@
     transition: border-color 0.2s;
 }
 
+.selectfield {
+    border: 2px solid #b20a0a;
+    margin: 4px 0 0;
+    padding: 7px 10px;
+    font-size: 14px;
+    height: 40px;
+    border-radius: 6px;
+    width: 100%;
+    color: #333;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.selectfield:focus {
+    border-color: #8a0707;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(178, 10, 10, 0.12);
+}
+
 .textareafield:focus {
     border-color: #8a0707;
     outline: none;
