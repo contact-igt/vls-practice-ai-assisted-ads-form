@@ -91,11 +91,6 @@ const Response = () => {
                   <strong>Mobile:</strong> {userDetail.mobile}
                 </p>
               )}
-              {userDetail.email && (
-                <p>
-                  <strong>Email:</strong> {userDetail.email}
-                </p>
-              )}
               {userDetail.who_are_you && (
                 <p>
                   <strong>Current Profession:</strong> {userDetail.who_are_you}

@@ -51,7 +51,6 @@ const ContactForm = ({ ipAddress }) => {
       form_type: "ads_lead",
       name: values?.name?.trim() || "",
       mobile: cleanMobile ? `+91${cleanMobile}` : "",
-      email: values?.email?.trim() || "",
       who_are_you: values?.whoAreYou?.trim() || "",
       why_join: values?.whyJoin?.trim() || "",
       attending: values?.attending || "no",
@@ -274,7 +273,6 @@ const ContactForm = ({ ipAddress }) => {
     initialValues: {
       name: "",
       mobile: "",
-      email: "",
       whoAreYou: "",
       whyJoin: "",
       attending: "",
@@ -294,9 +292,6 @@ const ContactForm = ({ ipAddress }) => {
           /^[6-9][0-9]{9}$/,
           "Enter a valid 10-digit mobile number"
         ),
-      email: Yup.string()
-        .email("Please enter a valid email address")
-        .required("Email address is required"),
       whoAreYou: Yup.string()
         .required("Please enter your current profession")
         .min(5, "Please write at least 5 characters")
@@ -412,24 +407,6 @@ const ContactForm = ({ ipAddress }) => {
             {formik.touched.mobile && formik.errors.mobile && (
               <small style={{ fontSize: "12px", color: "#dc3545" }}>
                 {formik.errors.mobile}
-              </small>
-            )}
-          </div>
-
-          {/* ── Email Address ── */}
-          <div className={styles.inputgrp}>
-            <label>
-              Email Address<span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Your email address"
-              {...formik.getFieldProps("email")}
-            />
-            {formik.touched.email && formik.errors.email && (
-              <small style={{ fontSize: "12px", color: "#dc3545" }}>
-                {formik.errors.email}
               </small>
             )}
           </div>
