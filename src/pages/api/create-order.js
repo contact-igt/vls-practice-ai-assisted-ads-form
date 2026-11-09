@@ -1,35 +1,27 @@
+import { programConfig } from "@/constants/Home";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { amount } = req.body;
-    if (!amount || isNaN(amount)) {
-      return res.status(400).json({ error: "Invalid amount" });
+    const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!key_id || !secret) {
+      console.error("create-order: Razorpay env variables are missing");
+      return res.status(500).json({ error: "Payment is not configured" });
     }
 
-    const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-    const secret = process.env.NEXT_PUBLIC_RAZORPAY_KEY_SECRET;
-
-    console.log("Create Order Request Body:", req.body);
-    console.log("Key ID Exists:", !!key_id, key_id?.substring(0, 8));
-    console.log("Secret Exists:", !!secret, secret?.substring(0, 4));
-
-    // ----------------- Testing card detail ------------------
-
-    // const key_id = "rzp_test_Ss2NFtpJFLRAiw";
-    // const secret = "5mPlA2tiZUxTPd5sZ3zqT2Te";
+    // Amount is always taken from server-side config, never from the client.
+    const amount = Number(programConfig.fee);
+    if (!amount || Number.isNaN(amount)) {
+      return res.status(500).json({ error: "Invalid amount" });
+    }
 
     const auth =
       "Basic " + Buffer.from(`${key_id}:${secret}`).toString("base64");
-
-    const body = {
-      amount: Math.round(Number(amount) * 100), // rupees -> paise
-      currency: "INR",
-      receipt: `receipt_${Date.now()}`,
-      payment_capture: 1, // auto-capture (1) or manual (0)
-    };
 
     const r = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
@@ -37,7 +29,12 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
         Authorization: auth,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        amount: Math.round(amount * 100), // rupees -> paise
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+        payment_capture: 1,
+      }),
     });
 
     const data = await r.json();

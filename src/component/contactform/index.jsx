@@ -5,7 +5,7 @@ import styles from "./styles.module.css";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Title from "@/common/Title";
-import { /* HomePage, */ programConfig } from "@/constants/Home"; // HomePage: kept for Razorpay re-enablement
+import { HomePage, programConfig } from "@/constants/Home";
 // import { useRouter } from "next/router"; // Razorpay: disabled — re-enable when Razorpay is active
 import { useState } from "react";
 import { Popup } from "@/common/Popup";
@@ -22,6 +22,7 @@ const ContactForm = ({ ipAddress }) => {
   // const [instructionOpen, setInstructionOpen] = useState(false); // Razorpay: disabled
   // const [agree, setAgree] = useState(false);                     // Razorpay: disabled
   const [processing, setProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
   // const [formValues, setFormValues] = useState(null);             // Razorpay: disabled
 
   const registrationOpen = isRegistrationOpen(programConfig);
@@ -77,8 +78,7 @@ const ContactForm = ({ ipAddress }) => {
           body: formData.toString(),
         }
       );
-      const text = await res.text();
-      console.log("Google Sheet Response:", text);
+      await res.text();
       if (res.ok) {
         return true;
       }
@@ -96,7 +96,6 @@ const ContactForm = ({ ipAddress }) => {
     }
   };
 
-  // eslint-disable-next-line no-unused-vars
   const safeSetPaymentDetails = async (data) => {
     if (typeof window === "undefined") return;
     try {
@@ -146,96 +145,66 @@ const ContactForm = ({ ipAddress }) => {
     });
   };
 
-  // ── Razorpay order + payment flow (COMMENTED OUT — do not remove) ─────────
-  /*
-  const openRazorpay = async () => {
-    if (!formValues) return;
-
-    if (!isRegistrationOpen(programConfig)) {
-      await submitWaitlist(formValues);
-      return;
-    }
+  // ── Razorpay order + payment flow ─────────────────────────────────────────
+  const openRazorpay = async (values) => {
+    setPaymentError("");
+    setProcessing(true);
 
     let order;
-
     try {
-      const resp = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: HomePage?.razorpay?.amount }),
-        // body: JSON.stringify({ amount: 1 }),
-      });
-
+      const resp = await fetch("/api/create-order", { method: "POST" });
       order = await resp.json();
-
-      if (!resp.ok) {
-        router.replace("/error");
-        return;
-      }
+      if (!resp.ok || !order?.id) throw new Error("Order creation failed");
     } catch (error) {
       console.error("Unable to create Razorpay order", error);
-      router.replace("/error");
+      setProcessing(false);
+      setPaymentError("Unable to start the payment. Please try again.");
       return;
     }
 
     if (typeof window === "undefined" || !window.Razorpay) {
-      console.error("Razorpay checkout script is not available");
-      router.replace("/error");
+      setProcessing(false);
+      setPaymentError("Payment service did not load. Please refresh and try again.");
       return;
     }
 
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      // key: "rzp_test_Ss2NFtpJFLRAiw",
       amount: order.amount,
       currency: order.currency,
-      name: formValues.name,
+      name: "VLS Law Academy",
       order_id: order.id,
-      description: `${HomePage?.razorpay?.title} - \u20B9${HomePage?.razorpay?.amount}`,
+      description: `${HomePage?.razorpay?.title} - ₹${programConfig.fee}`,
 
       handler: async (response) => {
-        if (!response?.razorpay_payment_id) {
-          router.replace("/error");
-          return;
-        }
-
         setProcessing(true);
 
+        let verified = false;
+        try {
+          const verifyResp = await fetch("/api/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          verified = (await verifyResp.json())?.verified === true;
+        } catch (err) {
+          console.error("Payment verification request failed:", err);
+        }
+
         const apiPayload = {
-          ...createBasePayload(formValues),
-          amount: order?.amount / 100,
-          razorpay_order_id: response.razorpay_order_id || "",
+          ...createBasePayload(values),
+          amount: order.amount / 100,
+          razorpay_order_id: response.razorpay_order_id || order.id,
           razorpay_payment_id: response.razorpay_payment_id || "",
           razorpay_signature: response.razorpay_signature || "",
-          payment_status: "paid",
-          captured: response?.captured ? String(response.captured) : "true",
+          payment_status: verified ? "paid" : "paid_unverified",
         };
 
-        try {
-          await registerUserToDB(apiPayload);
-        } catch (err) {
-          console.error("Database registration failed after payment:", err);
-        }
         await safeSetPaymentDetails(apiPayload);
-
-        const sessionDate =
-          programConfig.sessionStatus === "announced" && programConfig.date
-            ? programConfig.date
-            : "Date to be announced";
-
-        // try {
-        //   await handleWhatsappMessage(
-        //     `91${formValues.mobile}`,
-        //     formValues.name,
-        //     programConfig.fee,
-        //     "Decoding of Practice - AI-Assisted Legal Practice Masterclass",
-        //     sessionDate,
-        //     programConfig.mode,
-        //     sessionDate
-        //   );
-        // } catch (error) {
-        //   console.error("WhatsApp notification failed after payment", error);
-        // }
 
         const params = new URLSearchParams();
         Object.keys(apiPayload).forEach((key) =>
@@ -247,26 +216,34 @@ const ContactForm = ({ ipAddress }) => {
           console.error("Google Sheet registration failed after payment");
         }
 
+        // Payment succeeded — always land on the thank-you page.
         window.location.href = "/thank-you";
       },
 
       prefill: {
-        name: formValues.name,
-        contact: formValues.mobile,
+        name: values.name,
+        contact: `+91${values.mobile}`,
+      },
+
+      modal: {
+        ondismiss: () => {
+          setProcessing(false);
+          setPaymentError("Payment was not completed. Please try again to confirm your seat.");
+        },
       },
 
       theme: { color: "#b20a0a" },
     };
 
     const razor = new window.Razorpay(options);
-
     razor.on("payment.failed", () => {
-      router.replace("/error");
+      setProcessing(false);
+      setPaymentError("Payment failed. Please try again.");
     });
 
+    setProcessing(false); // hide our overlay while Razorpay checkout is open
     razor.open();
   };
-  */
 
   // ── Formik ────────────────────────────────────────────────────────────────
   const formik = useFormik({
@@ -304,39 +281,17 @@ const ContactForm = ({ ipAddress }) => {
     }),
 
     onSubmit: async (values) => {
+      if (registrationOpen) return openRazorpay(values);
+
+      // Waitlist mode — no payment, just record the lead.
       setProcessing(true);
-
-      const apiPayload = {
-        ...createBasePayload(values),
-        // amount: 0,                   // Razorpay: kept for re-enablement
-        // razorpay_order_id: "",       // Razorpay: kept for re-enablement
-        // razorpay_payment_id: "",     // Razorpay: kept for re-enablement
-        // razorpay_signature: "",      // Razorpay: kept for re-enablement
-        // payment_status: "registered",// Razorpay: kept for re-enablement
-        // captured: "",               // Razorpay: kept for re-enablement
-      };
-
-      // DB registration — commented out, re-enable when backend is active
-      // try {
-      //   await registerUserToDB(apiPayload);
-      // } catch (err) {
-      //   console.error("Database registration failed:", err);
-      // }
-
-      // Save details for Thank You page display
+      const apiPayload = { ...createBasePayload(values), payment_status: "waitlist" };
       await safeSetPaymentDetails(apiPayload);
-
-      // ── Google Sheet submission (active) ─────────────────────────────────
       const params = new URLSearchParams();
       Object.keys(apiPayload).forEach((key) =>
         params.append(key, apiPayload[key] ?? "")
       );
-
-      const sheetSaved = await handleGoogleSheetForm(params);
-      if (!sheetSaved) {
-        console.error("Google Sheet submission failed");
-      }
-
+      await handleGoogleSheetForm(params);
       window.location.href = "/thank-you";
     },
   });
@@ -503,9 +458,14 @@ const ContactForm = ({ ipAddress }) => {
           </div>
 
           {/* ── Submit ── */}
+          {paymentError && (
+            <small style={{ fontSize: "13px", color: "#dc3545", display: "block", marginTop: "8px", textAlign: "center" }}>
+              {paymentError}
+            </small>
+          )}
           <div className={`mt-4 d-md-flex justify-content-center`}>
             <Button
-              name={registrationOpen ? "REGISTER NOW" : "JOIN WAITLIST"}
+              name={registrationOpen ? `PAY ₹${programConfig.fee} & REGISTER` : "JOIN WAITLIST"}
               type={"submit"}
               disabled={processing}
             />
@@ -513,69 +473,12 @@ const ContactForm = ({ ipAddress }) => {
         </form>
       </div>
 
-      {/* ── Razorpay Instruction Popup (COMMENTED OUT — do not remove) ── */}
-      {/*
-      <Popup open={instructionOpen} onClose={() => setInstructionOpen(false)}>
-        <div className={styles.loadingPopup}>
-          <h4>{'\u26A0\uFE0F'} Important Payment Instruction</h4>
-
-          <h6>
-            After completing the payment, please wait until you are redirected
-            to the success page. Do not close or refresh this page.
-          </h6>
-
-          <p className="text-danger fw-semibold mt-2">
-            If you close or refresh this page during payment, your registration
-            details may not be recorded.
-          </p>
-
-          <div className="form-check mt-3 d-flex justify-content-center gap-2">
-            <input
-              type="checkbox"
-              className="form-check-input custom-red-checkbox"
-              checked={agree}
-              onChange={(e) => setAgree(e.target.checked)}
-              id="agree"
-            />
-            <label
-              className="form-check-label text-danger fw-bold"
-              htmlFor="agree"
-              style={{ fontSize: "14px", marginTop: "2px" }}
-            >
-              I understand and agree.
-            </label>
-          </div>
-
-          <div
-            className={`d-flex flex-md-row flex-column flex-column-reverse gap-3 mt-4 ${styles.instructionbtn}`}
-          >
-            <button
-              className="btn btn-secondary"
-              onClick={() => setInstructionOpen(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-danger"
-              disabled={!agree}
-              onClick={() => {
-                setInstructionOpen(false);
-                openRazorpay();
-              }}
-            >
-              I Agree & Pay
-            </button>
-          </div>
-        </div>
-      </Popup>
-      */}
-
       {/* ── Processing Popup ── */}
       <Popup open={processing} closeOnOutsideClick={false}>
         <div className={styles.loadingPopup}>
           <h4>
             {'\u26A0\uFE0F'}{" "}
-            Submitting Your Registration...
+            Processing Your Payment...
           </h4>
           <p>Please wait. Do not close or refresh this page.</p>
         </div>

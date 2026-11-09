@@ -19,7 +19,7 @@ export const programConfig = {
   duration: "3 Hours",
   mode: "Live on Google Meet (Interactive Q&A)",
   language: "English / Tamil",
-  fee: null,
+  fee: 199, // INR — single source for checkout amount
   recordingProvided: false,
   certificateProvided: true, // only to attendees who complete 80%+ of the session
   whatsapp: "+919500025216",
@@ -386,6 +386,6 @@ export const HomePage = {
 
   razorpay: {
     title: "Decoding of Practice \u2014 AI-Assisted Legal Practice Masterclass",
-    amount: 0,
+    amount: programConfig.fee,
   },
 };
