@@ -48,14 +48,12 @@ const RegisterSticky = ({ scrollToContactForm }) => {
         {Boolean(programConfig.fee) && (
           <div
             className={styles.priceWrap}
-            aria-label={`Price INR 999 discounted to INR ${programConfig.fee}`}
+            aria-label={`Price INR ${programConfig.fee}`}
           >
             <p className={styles.pricing}>
-              <span>{`INR \u20B9999`}</span>
               <strong>{`INR \u20B9${programConfig.fee}`}</strong>
             </p>
             <p className={styles.mobilePricing}>
-              <span>{`INR \u20B9999`}</span>
               <strong>{`INR \u20B9${programConfig.fee}`}</strong>
             </p>
           </div>
