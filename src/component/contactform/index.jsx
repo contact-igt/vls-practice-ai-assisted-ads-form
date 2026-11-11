@@ -67,22 +67,30 @@ const ContactForm = ({ ipAddress }) => {
     };
   };
 
-  // ── Google Sheet submission (active) ──────────────────────────────────────
+  // Used only when the DOP registration API is unavailable.
   const handleGoogleSheetForm = async (formData, retries = 3, delay = 1500) => {
     try {
       const res = await fetch(
-        "https://script.google.com/macros/s/AKfycbyXBhBQtwFuyJeTAdzcDb5DOEVylSdbgBHw5yASMEjSdWhc1BwqN8c5LAdW-v-YaNKp/exec",
+        process.env.NEXT_PUBLIC_GOOGLE_SHEET_WEBHOOK_URL ||
+          "https://script.google.com/macros/s/AKfycbwEJkW8LbUaYO6kT_15vLTjuB-6BUR2291MxB7OGhgbB5LGrcEOvzLoruIHID2CHI88/exec",
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formData.toString(),
         }
       );
-      await res.text();
-      if (res.ok) {
-        return true;
+      const responseBody = await res.text();
+      if (!res.ok) throw new Error("Sheet responded with non-OK");
+
+      try {
+        const result = JSON.parse(responseBody);
+        if (result?.result !== "success") throw new Error("Sheet rejected the row");
+      } catch (error) {
+        if (error.message === "Sheet rejected the row" || /<title>\s*Error\b|accounts\.google\.com/i.test(responseBody)) {
+          throw error;
+        }
       }
-      throw new Error("Sheet responded with non-OK");
+      return true;
     } catch (err) {
       console.error(
         `Google Sheet attempt failed. Retries left: ${retries}, err `
@@ -118,6 +126,20 @@ const ContactForm = ({ ipAddress }) => {
         }
       );
     });
+
+  const saveRegistration = async (payload) => {
+    try {
+      await registerUserToDB(payload);
+      return true;
+    } catch (error) {
+      console.error("DOP registration API failed; saving to Google Sheet", error);
+      const params = new URLSearchParams();
+      Object.entries(payload).forEach(([key, value]) =>
+        params.append(key, value ?? "")
+      );
+      return handleGoogleSheetForm(params);
+    }
+  };
 
   // ── WhatsApp helper (kept, not removed) ───────────────────────────────────
   // eslint-disable-next-line no-unused-vars
@@ -169,7 +191,8 @@ const ContactForm = ({ ipAddress }) => {
     }
 
     const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key: "rzp_test_Ss2NFtpJFLRAiw",
+      // key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: order.amount,
       currency: order.currency,
       name: "VLS Law Academy",
@@ -201,19 +224,14 @@ const ContactForm = ({ ipAddress }) => {
           razorpay_order_id: response.razorpay_order_id || order.id,
           razorpay_payment_id: response.razorpay_payment_id || "",
           razorpay_signature: response.razorpay_signature || "",
-          payment_status: verified ? "paid" : "paid_unverified",
+          payment_status: verified ? "paid" : "attempted",
         };
 
         await safeSetPaymentDetails(apiPayload);
 
-        const params = new URLSearchParams();
-        Object.keys(apiPayload).forEach((key) =>
-          params.append(key, apiPayload[key] ?? "")
-        );
-
-        const sheetSaved = await handleGoogleSheetForm(params);
-        if (!sheetSaved) {
-          console.error("Google Sheet registration failed after payment");
+        const registrationSaved = await saveRegistration(apiPayload);
+        if (!registrationSaved) {
+          console.error("Registration could not be saved after payment");
         }
 
         // Payment succeeded — always land on the thank-you page.
@@ -287,11 +305,12 @@ const ContactForm = ({ ipAddress }) => {
       setProcessing(true);
       const apiPayload = { ...createBasePayload(values), payment_status: "waitlist" };
       await safeSetPaymentDetails(apiPayload);
-      const params = new URLSearchParams();
-      Object.keys(apiPayload).forEach((key) =>
-        params.append(key, apiPayload[key] ?? "")
-      );
-      await handleGoogleSheetForm(params);
+      const registrationSaved = await saveRegistration(apiPayload);
+      if (!registrationSaved) {
+        setProcessing(false);
+        setPaymentError("We could not save your registration. Please try again.");
+        return;
+      }
       window.location.href = "/thank-you";
     },
   });
