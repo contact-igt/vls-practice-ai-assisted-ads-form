@@ -19,7 +19,7 @@ export const programConfig = {
   duration: "3 Hours",
   mode: "Live on Google Meet (Interactive Q&A)",
   language: "English / Tamil",
-  fee: 1, // INR — single source for checkout amount
+  fee: 199, // INR — single source for checkout amount
   recordingProvided: false,
   certificateProvided: true, // only to attendees who complete 80%+ of the session
   whatsapp: "+919500025216",
