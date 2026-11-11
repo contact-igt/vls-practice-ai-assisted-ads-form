@@ -191,8 +191,8 @@ const ContactForm = ({ ipAddress }) => {
     }
 
     const options = {
-      key: "rzp_test_Ss2NFtpJFLRAiw",
-      // key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      // key: "rzp_test_Ss2NFtpJFLRAiw",
       amount: order.amount,
       currency: order.currency,
       name: "VLS Law Academy",
