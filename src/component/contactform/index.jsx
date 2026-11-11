@@ -41,7 +41,9 @@ const ContactForm = ({ ipAddress }) => {
 
   const getProgramDate = () =>
     isRegistrationOpen(programConfig) && programConfig.date
-      ? programConfig.date
+      ? (programConfig.time
+          ? `${programConfig.date} (${programConfig.time})`
+          : programConfig.date)
       : "TBA";
 
   const createBasePayload = (values) => {
@@ -440,7 +442,10 @@ const ContactForm = ({ ipAddress }) => {
           <div className={`${styles.inputgrp} ${styles.checkboxgrp}`}>
             <p className={styles.checkboxlabel} style={{ marginBottom: "12px" }}>
               Will you be able to attend the live session on{" "}
-              <strong>{programConfig.date}?</strong>
+              <strong>
+                {programConfig.date}
+                {programConfig.time ? ` (${programConfig.time})` : ""}?
+              </strong>
               <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
             </p>
             <div className={styles.radioGroup}>
