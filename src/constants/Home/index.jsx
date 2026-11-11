@@ -14,7 +14,7 @@ export const programConfig = {
   sessionStatus: SESSION_STATUS,
   // Set these only when SESSION_STATUS is "announced" and a real date is confirmed:
   date: "Sunday, 15 November 2026",
-  time: "",
+  time: "6:00 PM - 9:00 PM IST",
   classStartAt: "2026-11-15T18:00:00+05:30",
   duration: "3 Hours",
   mode: "Live on Google Meet (Interactive Q&A)",
@@ -82,7 +82,9 @@ export const HomePage = {
       id: 1,
       value:
         SESSION_STATUS === "announced" && programConfig.date
-          ? programConfig.date
+          ? (programConfig.time
+              ? `${programConfig.date} - ${programConfig.time}`
+              : programConfig.date)
           : "Next live session \u2014 date to be announced",
       icon: "calendar-clock",
     },
@@ -380,7 +382,7 @@ export const HomePage = {
     {
       id: 12,
       question: "When is the next session?",
-      answer: `The next live session is on ${programConfig.date}.`,
+      answer: `The next live session is on ${programConfig.date}${programConfig.time ? ` (${programConfig.time})` : ""}.`,
     },
   ],
 
