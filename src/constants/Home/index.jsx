@@ -13,9 +13,9 @@ export const programConfig = {
   category: "AI-Assisted Legal Practice Masterclass",
   sessionStatus: SESSION_STATUS,
   // Set these only when SESSION_STATUS is "announced" and a real date is confirmed:
-  date: "Sunday, 15 November 2026",
+  date: "Saturday, 21 November 2026",
   time: "6:00 PM - 9:00 PM IST",
-  classStartAt: "2026-11-15T18:00:00+05:30",
+  classStartAt: "2026-11-21T18:00:00+05:30",
   duration: "3 Hours",
   mode: "Live on Google Meet (Interactive Q&A)",
   language: "English / Tamil",
