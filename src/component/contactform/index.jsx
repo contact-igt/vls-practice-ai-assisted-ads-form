@@ -56,7 +56,7 @@ const ContactForm = ({ ipAddress }) => {
       mobile: cleanMobile ? `+91${cleanMobile}` : "",
       who_are_you: values?.whoAreYou?.trim() || "",
       why_join: values?.whyJoin?.trim() || "",
-      attending: values?.attending || "no",
+      attending: values?.attending || "yes",
       programm_date: getProgramDate(),
       page_name: programConfig.pageName || "decoding-of-practice",
       ip_address: ipAddress || "",
@@ -272,7 +272,6 @@ const ContactForm = ({ ipAddress }) => {
       mobile: "",
       whoAreYou: "",
       whyJoin: "",
-      attending: "",
     },
 
     validationSchema: Yup.object({
@@ -295,9 +294,6 @@ const ContactForm = ({ ipAddress }) => {
         .required("Please share what made you interested")
         .min(10, "Please write at least 10 characters")
         .max(500, "Must not exceed 500 characters"),
-      attending: Yup.string()
-        .oneOf(["yes", "no"], "Please select Yes or No")
-        .required("Please confirm your attendance"),
     }),
 
     onSubmit: async (values) => {
@@ -438,48 +434,7 @@ const ContactForm = ({ ipAddress }) => {
             )}
           </div>
 
-          {/* ── Attendance Confirmation — Nov 15 ── */}
-          <div className={`${styles.inputgrp} ${styles.checkboxgrp}`}>
-            <p className={styles.checkboxlabel} style={{ marginBottom: "12px" }}>
-              Will you be able to attend the live session on{" "}
-              <strong>
-                {programConfig.date}
-                {programConfig.time ? ` (${programConfig.time})` : ""}?
-              </strong>
-              <span style={{ color: "#b20a0a", marginLeft: "2px" }}>*</span>
-            </p>
-            <div className={styles.radioGroup}>
-              <label className={`${styles.radioOption} ${formik.values.attending === "yes" ? styles.radioSelected : ""
-                }`}>
-                <input
-                  type="radio"
-                  name="attending"
-                  value="yes"
-                  checked={formik.values.attending === "yes"}
-                  onChange={() => formik.setFieldValue("attending", "yes")}
-                  onBlur={formik.handleBlur}
-                />
-                <span>✔ Yes, I will attend</span>
-              </label>
-              <label className={`${styles.radioOption} ${formik.values.attending === "no" ? styles.radioSelectedNo : ""
-                }`}>
-                <input
-                  type="radio"
-                  name="attending"
-                  value="no"
-                  checked={formik.values.attending === "no"}
-                  onChange={() => formik.setFieldValue("attending", "no")}
-                  onBlur={formik.handleBlur}
-                />
-                <span>✖ No, I cannot attend</span>
-              </label>
-            </div>
-            {formik.touched.attending && formik.errors.attending && (
-              <small style={{ fontSize: "12px", color: "#dc3545", display: "block", marginTop: "6px" }}>
-                {formik.errors.attending}
-              </small>
-            )}
-          </div>
+
 
           {/* ── Submit ── */}
           {paymentError && (
