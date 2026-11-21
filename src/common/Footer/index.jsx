@@ -21,8 +21,7 @@ const Footer = () => {
                   </div>
                   <p>
                     VLS law academy as a coaching institute for Law graduates
-                    assisting them to scale up the Judicial services exams, Law
-                    optional subject (IAS/civil services exam), UGC (Junior
+                    assisting them to scale up the Judicial services exams and UGC (Junior
                     research fellowship/ lectureship for law)
                   </p>
                 </div>
